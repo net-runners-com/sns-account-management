@@ -1,0 +1,5 @@
+# ローカルRAG検索基盤（vault-search）の依存
+sqlite-vec>=0.1.6
+sentence-transformers>=3.0.0   # bge-m3 / 静的埋め込み 両対応のローダ
+mcp>=1.2.0                      # MCPサーバ（FastMCP）
+numpy>=1.26

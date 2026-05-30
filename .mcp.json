@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "vault-search": {
+      "command": "lib/index/.venv/bin/python",
+      "args": ["lib/index/mcp_server.py"]
+    }
+  }
+}

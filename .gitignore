@@ -1,0 +1,29 @@
+# Claude Code 個人設定
+.claude/settings.local.json
+
+# Obsidian: 個人環境依存ファイル（差分が頻発するため共有しない）
+knowledge/.obsidian/workspace.json
+knowledge/.obsidian/workspace-mobile.json
+knowledge/.obsidian/graph.json
+knowledge/.obsidian/cache
+knowledge/.obsidian/plugins/*/data.json
+
+# research: 生データ(raw)はコミットしない（findings/READMEのみ管理）
+research/**/raw/*
+!research/**/raw/.gitkeep
+
+# RAG索引（生成物・Markdownからいつでも再構築可能）
+.index/
+lib/index/.venv/
+**/__pycache__/
+
+# 埋め込みモデル（プロジェクト内に自己完結・DLし直せる）
+.models/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 一時ファイル
+*.tmp
+*.log
