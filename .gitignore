@@ -20,6 +20,12 @@ lib/index/.venv/
 # 埋め込みモデル（プロジェクト内に自己完結・DLし直せる）
 .models/
 
+# 投稿DB（操作用バイナリ）。本文込みの真実の源だが、git追跡は db/*.jsonl の方で行う
+# （復元は: python lib/posts/posts.py import-jsonl）
+db/posts.db
+db/*.db-wal
+db/*.db-shm
+
 # OS
 .DS_Store
 Thumbs.db

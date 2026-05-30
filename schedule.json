@@ -1,41 +1,26 @@
 {
   "version": 1,
   "updated": "2026-05-30",
+  "source": "db/posts.db (generated)",
   "posts": [
     {
       "id": "2026-05-31-ai-hacks-x-001",
       "brand": "ai-hacks",
       "platform": "x",
       "date": "2026-05-31",
-      "time": "08:00",
       "theme": "自分専用DB",
       "title": "AI活用で一番効いたこと",
       "status": "draft",
-      "draft": "accounts/ai-hacks/platforms/x/drafts/hook-draft.md",
       "notes": "フック検証"
-    },
-    {
-      "id": "2026-06-01-ai-hacks-threads-001",
-      "brand": "ai-hacks",
-      "platform": "threads",
-      "date": "2026-06-01",
-      "time": "07:30",
-      "theme": "ローカルDB",
-      "title": "都度取りに行くのをやめた話",
-      "status": "scheduled",
-      "draft": "accounts/ai-hacks/platforms/threads/published/2026-05-20-local-db.md",
-      "notes": ""
     },
     {
       "id": "2026-06-03-ai-hacks-note-001",
       "brand": "ai-hacks",
       "platform": "note",
       "date": "2026-06-03",
-      "time": "12:00",
       "theme": "ローカルRAG構築",
       "title": "bge-m3+sqlite-vecで作る検索基盤",
       "status": "draft",
-      "draft": "accounts/ai-hacks/platforms/note/drafts/rag-article.md",
       "notes": "メンバーシップ送客"
     }
   ],

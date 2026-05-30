@@ -16,7 +16,8 @@ sns-account-management/
 ├── AGENTS.md                  ← Codex 向け運用ガイド（コード・自動化担当）
 ├── README.md
 ├── .mcp.json                  ← MCPサーバ設定（プロジェクトスコープ）
-├── schedule.json              ← ★ 全ブランド・全媒体の投稿スケジュール（一元管理）
+├── schedule.json              ← 未公開投稿の予定（db/posts.db から生成する派生ビュー）
+├── db/                        ← ★ 投稿データ SQLite（posts.db=本文込みの真実の源 / *.jsonl=git追跡バックアップ）
 │
 ├── .claude/                   ← Claude Code 公式ディレクトリ
 │   ├── settings.json          ← 共有設定（コミットする）
@@ -46,7 +47,8 @@ sns-account-management/
 │
 ├── prompts/                   ← コンテンツ生成プロンプト集・コンテンツ設計システム
 ├── lib/                       ← コード本体（再利用するライブラリ・システム）
-│   └── index/                 ← ローカルRAG検索基盤（vault-search MCP）
+│   ├── index/                 ← ローカルRAG検索基盤（vault-search MCP）
+│   └── posts/                 ← 投稿データCLI（db/posts.db の操作・migrate・export）
 ├── scripts/                   ← 生成した単発スクリプト置き場
 ├── .index/                    ← 検索DB（生成物・gitignore・再構築可能）
 ├── .models/                   ← 埋め込みモデル bge-m3（プロジェクト内に自己完結・gitignore）
@@ -66,37 +68,27 @@ sns-account-management/
 
 ---
 
-## スケジュール管理（schedule.json）
+## 投稿データ管理（db/posts.db）
 
-「いつ・どのブランドの・どの媒体に・何を出すか」は **ルートの `schedule.json` 1ファイルに集約**する（媒体ごとには持たない）。全ブランド横断で俯瞰でき、Codex/スクリプトが読んで自動投稿にも使える機械可読フォーマット。
+投稿（**本文込み**）・スケジュール・分析は **`db/posts.db`（SQLite）に一元管理**する。**DBが真実の源**。
+媒体ごとにファイルを散らさず、状態更新・クエリ・分析集計・自動投稿を構造化データで扱う。
+操作は `lib/posts/posts.py`（CLI・stdlibのみ）。詳細は `lib/posts/README.md`。
 
-```jsonc
-{
-  "version": 1,
-  "updated": "YYYY-MM-DD",        // 最終更新日
-  "posts": [
-    {
-      "id": "2026-05-31-brand-a-x-001", // 一意ID（日付-ブランド-媒体-連番）
-      "brand": "brand-a",              // accounts/<brand>
-      "platform": "x",                 // x | note | instagram | threads | youtube
-      "date": "2026-05-31",
-      "time": "08:00",
-      "theme": "",
-      "title": "",
-      "status": "idea",                // idea → draft → scheduled → published
-      "draft": "accounts/brand-a/platforms/x/drafts/xxx.md", // 原稿への相対パス
-      "notes": ""
-    }
-  ],
-  "ideas": [                            // 未スケジュールのネタストック
-    { "brand": "", "platform": null, "theme": "", "notes": "" }
-  ]
-}
+```
+db/posts.db                      ← 操作用バイナリ（gitignore・本文込み）
+├── posts(id, brand, platform, status, title, theme, body, url, scheduled_at, published_at, …)
+└── analytics(post_id, captured_at, impressions, engagements, saves, follows, …)
+
+db/posts.jsonl / analytics.jsonl ← git追跡のバックアップ（差分が読める・import-jsonlで復元）
+schedule.json                    ← 未公開(draft/scheduled/idea)の派生ビュー（exportで生成・自動化が読む）
+accounts/<brand>/platforms/<媒体>/published/<id>.md ← 公開済みの生成md（Obsidian/RAGが拾う）
 ```
 
-- **status の遷移**: `idea`（ネタ）→ `draft`（原稿あり）→ `scheduled`（日時確定）→ `published`（公開済）。
-- **原稿の実体**は `accounts/<brand>/platforms/<媒体>/drafts/` に置き、`draft` フィールドでパス参照する（schedule.json には本文を入れない）。
-- 公開後は `published/` に原稿を移し、status を `published` に更新する。
+- **status の遷移**: `idea`（ネタ）→ `draft`（原稿あり）→ `scheduled`（日時確定）→ `published`（公開済）→（`archived`）。
+- **本文はDBに入れる**（`posts.body`）。markdownはDBから生成する出力で、源ではない。
+- **公開すると**：`set-status <id> published` → `export` で `published/<id>.md` を生成 → RAG索引に載る。
+- **変更したら `export`**：schedule.json・公開md・jsonl を最新化（git追跡分を同期）。
+- **Codexの自動投稿**：`scheduled` の行を読んで投稿し、`set-status published` + `metrics` を書き戻す。
 
 ---
 
