@@ -16,7 +16,12 @@ for (let i = 0; i < args.length; i++) {
   else if (a === "--loop") loop = true;
   else if (a === "--once") loop = false;
   else if (a === "--dry-run") dryRun = true;
-  else if (a === "--interval") interval = Number(args[++i]);
+  else if (a === "--interval") {
+    const raw = args[++i];
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 1) { console.error(`invalid --interval: ${raw}\n${USAGE}`); process.exit(1); }
+    interval = n;
+  }
   else { console.error(`unknown arg: ${a}\n${USAGE}`); process.exit(1); }
 }
 const accounts = all ? listConfigAccounts() : account ? [account] : [];
