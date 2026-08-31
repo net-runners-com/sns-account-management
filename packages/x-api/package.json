@@ -1,0 +1,26 @@
+{
+  "name": "x-api",
+  "version": "0.2.0",
+  "description": "X (Twitter) Web GraphQL pure HTTP client + CLI",
+  "private": true,
+  "type": "module",
+  "main": "./lib/index.mjs",
+  "exports": {
+    ".": "./lib/index.mjs",
+    "./browser-login": "./lib/browser_login.mjs",
+    "./search": "./lib/search.mjs",
+    "./follows": "./lib/follows.mjs",
+    "./session": "./session.mjs"
+  },
+  "scripts": {
+    "check": "node check_session.mjs",
+    "login": "node login_browser.mjs",
+    "login:env": "node login.mjs",
+    "test": "node --test 'test/**/*.test.mjs'"
+  },
+  "dependencies": {
+    "camoufox-js": "^0.10.2",
+    "cloakbrowser": "^0.3.28",
+    "x-client-transaction-id": "^0.2.3"
+  }
+}
