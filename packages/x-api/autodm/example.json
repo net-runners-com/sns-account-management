@@ -1,0 +1,16 @@
+{
+  "daily_cap": 50,
+  "poll_interval_sec": 600,
+  "pending_days": 7,
+  "dm_delay_sec": [30, 90],
+  "search_max_pages": 3,
+  "triggers": [
+    {
+      "id": "campaign-a",
+      "post_id": "1234567890123456789",
+      "keywords": ["特典"],
+      "dm_text": "リプありがとうございます！こちらが特典です → https://example.com/xxxx",
+      "active": true
+    }
+  ]
+}
