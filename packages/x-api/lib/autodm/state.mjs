@@ -13,7 +13,7 @@ export function logPath(accountName, dir = DEFAULT_DATA_DIR) {
 }
 
 export function emptyState() {
-  return { sent: {}, pending: {}, failed: {}, expired: {}, daily: {}, me: null };
+  return { sent: {}, pending: {}, failed: {}, expired: {}, daily: {}, me: null, rate_limited_until: null };
 }
 
 export function loadState(path) {

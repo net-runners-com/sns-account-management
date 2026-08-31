@@ -12,6 +12,8 @@ export const DEFAULTS = {
   pending_days: 7,
   dm_delay_sec: [30, 90],
   search_max_pages: 3,
+  pending_check_limit: 50,
+  profile_delay_sec: [1, 3],
 };
 export const MIN_POLL_INTERVAL_SEC = 300;
 export const MAX_DAILY_CAP = 500;
@@ -31,6 +33,17 @@ export function normalizeConfig(raw) {
     c.dm_delay_sec = c.dm_delay_sec.map(Number);
   }
   c.search_max_pages = Math.max(1, Number(c.search_max_pages) || DEFAULTS.search_max_pages);
+  const rawPendingCheckLimit = Number(c.pending_check_limit);
+  c.pending_check_limit = Math.max(1, Number.isFinite(rawPendingCheckLimit) ? rawPendingCheckLimit : DEFAULTS.pending_check_limit);
+  if (
+    !Array.isArray(c.profile_delay_sec) || c.profile_delay_sec.length !== 2 ||
+    !c.profile_delay_sec.every((n) => Number.isFinite(Number(n)) && Number(n) >= 0) ||
+    Number(c.profile_delay_sec[0]) > Number(c.profile_delay_sec[1])
+  ) {
+    c.profile_delay_sec = [...DEFAULTS.profile_delay_sec];
+  } else {
+    c.profile_delay_sec = c.profile_delay_sec.map(Number);
+  }
   if (!Array.isArray(c.triggers)) throw new Error("config.triggers must be an array");
   c.triggers = c.triggers.map((t, i) => {
     if (t.post_id === undefined || t.post_id === null || t.post_id === "") throw new Error(`triggers[${i}].post_id required`);

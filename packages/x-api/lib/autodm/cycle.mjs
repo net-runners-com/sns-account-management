@@ -1,5 +1,6 @@
 // autodm 1サイクル: 自分宛リプ取得 → トリガー/キーワード照合 → フォロー判定 → DM 送信 → state 保存.
 // ネットワークは deps に注入する (テストは fake deps).
+import { randomUUID } from "node:crypto";
 import { matchKeyword } from "./keyword.mjs";
 import {
   candidateKey, dailyCount, bumpDaily, expirePending,
@@ -62,11 +63,20 @@ export function defaultDeps() {
   };
 }
 
+/** pending を last_checked 昇順 ([key, entry] の配列。未設定は先頭) に並べる */
+function sortPendingByLastChecked(pending) {
+  const lc = (p) => p.last_checked || "";
+  return Object.entries(pending).sort((a, b) => {
+    const la = lc(a[1]), lb = lc(b[1]);
+    return la < lb ? -1 : la > lb ? 1 : 0;
+  });
+}
+
 /**
  * 1アカウント 1サイクル.
  * @returns {Promise<{matched, pending, sent, failed, expired, capReached, sessionError?}>}
  */
-export async function runCycle({ accountName, dryRun = false, deps, paths = {}, now = () => new Date() }) {
+export async function runCycle({ accountName, dryRun = false, deps = defaultDeps(), paths = {}, now = () => new Date() }) {
   const { getAccount, getProfile, fetchReplies, sendDm, sleep, log } = deps;
   const cfgPath = paths.config || configPath(accountName);
   const stPath = paths.state || statePath(accountName);
@@ -74,7 +84,7 @@ export async function runCycle({ accountName, dryRun = false, deps, paths = {}, 
 
   const config = loadConfig(cfgPath);
   const state = loadState(stPath);
-  const summary = { matched: 0, pending: 0, sent: 0, failed: 0, expired: 0, capReached: false };
+  const summary = { matched: 0, pending: 0, sent: 0, failed: 0, expired: 0, capReached: false, replies_fetched: 0 };
   const emit = (event, extra = {}) => {
     const e = { account: accountName, event, ...extra };
     appendLog(lgPath, e);
@@ -98,6 +108,7 @@ export async function runCycle({ accountName, dryRun = false, deps, paths = {}, 
 
     // 2. 新規候補 → pending
     const replies = await fetchReplies(acc, { screenName: me.screen_name, maxPages: config.search_max_pages, accountName });
+    summary.replies_fetched = replies.length;
     for (const c of findCandidates({ replies, triggers: active, myUserId: state.me.user_id, state })) {
       summary.matched++;
       state.pending[c.key] = {
@@ -106,10 +117,19 @@ export async function runCycle({ accountName, dryRun = false, deps, paths = {}, 
       };
       emit("matched", { key: c.key, trigger: c.trigger.id, post_id: c.trigger.post_id, user_id: c.user_id, screen_name: c.screen_name, keyword: c.keyword });
     }
+    saveState(stPath, state); // C1: マッチ直後に永続化 (この後の送信中に落ちても matched→pending が残る)
 
     // 3. pending を処理: フォロー判定 → 送信
     const trigById = new Map(config.triggers.map((t) => [t.id, t]));
-    for (const [key, p] of Object.entries(state.pending)) {
+    const pendingEntries = sortPendingByLastChecked(state.pending);
+    let profileFetchCount = 0;
+    for (const [key, p] of pendingEntries) {
+      // I2: 前サイクルの 429 でまだ「当日の残り」を止めている
+      if (state.rate_limited_until && now() < new Date(state.rate_limited_until)) {
+        emit("rate_limited", { until: state.rate_limited_until });
+        summary.rateLimited = true;
+        break;
+      }
       const trig = trigById.get(p.trigger);
       if (!trig || !trig.active) continue;
       if (dailyCount(state, now()) >= config.daily_cap) {
@@ -117,22 +137,46 @@ export async function runCycle({ accountName, dryRun = false, deps, paths = {}, 
         emit("cap_reached", { daily_cap: config.daily_cap });
         break;
       }
-      const prof = await getProfile(acc, { userId: p.user_id, accountName });
+      // I4: 1サイクルで再判定するプロフィール取得数を絞る (古い last_checked から優先)
+      if (profileFetchCount >= config.pending_check_limit) break;
+      if (profileFetchCount > 0) await sleep(jitterMs(config.profile_delay_sec));
+      profileFetchCount++;
+      let prof;
+      try {
+        prof = await getProfile(acc, { userId: p.user_id, accountName });
+      } catch (e) {
+        // I5: このエントリだけスキップして次へ (state は変更しない = 次サイクルで再試行)
+        if (e instanceof XSessionError) throw e;
+        p.last_checked = now().toISOString();
+        emit("profile_failed", { key, screen_name: p.screen_name, error: e.message });
+        continue;
+      }
+      p.last_checked = now().toISOString();
       if (!prof?.followed_by) { summary.pending++; continue; }
       if (dryRun) {
         emit("dry_run", { key, screen_name: p.screen_name, trigger: trig.id, text: trig.dm_text });
         continue;
       }
+      // I3: request_id を pending に永続化し、再送でも同じ id を使う (X 側の二重送信防止)
+      if (!p.request_id) p.request_id = randomUUID();
       try {
         await sleep(jitterMs(config.dm_delay_sec));
-        await sendDm(acc, { recipientId: p.user_id, text: trig.dm_text, accountName });
+        await sendDm(acc, { recipientId: p.user_id, text: trig.dm_text, accountName, requestId: p.request_id });
         state.sent[key] = { at: now().toISOString(), screen_name: p.screen_name, trigger: trig.id, user_id: p.user_id, post_id: p.post_id };
         delete state.pending[key];
         bumpDaily(state, now());
+        saveState(stPath, state); // C1: 送信成功のたびに永続化 (次の送信前に必ずディスクへ)
         summary.sent++;
         emit("sent", { key, screen_name: p.screen_name, trigger: trig.id });
       } catch (e) {
         if (e instanceof XSessionError) throw e;
+        // I2: 429 は当日の残りを送らない。attempts は増やさない (再送で無駄打ちしない)
+        if (e.status === 429) {
+          const d = now();
+          state.rate_limited_until = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).toISOString();
+          emit("rate_limited", { key, until: state.rate_limited_until });
+          break;
+        }
         p.attempts = (p.attempts || 0) + 1;
         p.last_error = String(e.message);
         emit("dm_failed", { key, screen_name: p.screen_name, attempts: p.attempts, error: e.message });
@@ -141,12 +185,18 @@ export async function runCycle({ accountName, dryRun = false, deps, paths = {}, 
           delete state.pending[key];
           summary.failed++;
         }
-        if (e.status === 429) {
-          emit("rate_limited", { key });
-          break;
-        }
       }
     }
+
+    // I7: 検索窓の取りこぼし/飽和を見える化するサイクル要約イベント (fetch 段階まで到達した時だけ)
+    emit("cycle", {
+      replies_fetched: summary.replies_fetched,
+      matched: summary.matched,
+      pending: summary.pending,
+      sent: summary.sent,
+      failed: summary.failed,
+      expired: summary.expired,
+    });
   } catch (e) {
     if (e instanceof XSessionError) {
       summary.sessionError = e.message;

@@ -16,14 +16,21 @@ test("normalizeConfig: デフォルト適用 + id/active 補完 + post_id 文字
   assert.equal(c.pending_days, 7);
   assert.deepEqual(c.dm_delay_sec, [30, 90]);
   assert.equal(c.search_max_pages, 3);
+  assert.equal(c.pending_check_limit, DEFAULTS.pending_check_limit);
+  assert.deepEqual(c.profile_delay_sec, [1, 3]);
   assert.deepEqual(c.triggers[0], { id: "trigger-0", post_id: "123", keywords: ["特典"], dm_text: "hi", active: true });
 });
 
-test("normalizeConfig: クランプ (poll>=300, cap<=500, dm_delay_sec 不正はデフォルト)", () => {
-  const c = normalizeConfig({ poll_interval_sec: 10, daily_cap: 9999, dm_delay_sec: [5], triggers: [trig] });
+test("normalizeConfig: クランプ (poll>=300, cap<=500, dm_delay_sec 不正はデフォルト, pending_check_limit>=1, profile_delay_sec 不正はデフォルト)", () => {
+  const c = normalizeConfig({
+    poll_interval_sec: 10, daily_cap: 9999, dm_delay_sec: [5], pending_check_limit: 0,
+    profile_delay_sec: [9], triggers: [trig],
+  });
   assert.equal(c.poll_interval_sec, 300);
   assert.equal(c.daily_cap, 500);
   assert.deepEqual(c.dm_delay_sec, [30, 90]);
+  assert.equal(c.pending_check_limit, 1);
+  assert.deepEqual(c.profile_delay_sec, [1, 3]);
 });
 
 test("normalizeConfig: 検証エラー", () => {

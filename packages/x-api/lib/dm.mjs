@@ -40,8 +40,8 @@ export function buildDmRequest({ myUserId, recipientId, text, requestId = random
 /**
  * DM を1通送る. session 切れは XSessionError、その他失敗は err.status 付き Error.
  */
-export async function sendDm(acc, { recipientId, text, accountName } = {}) {
-  const { url, body } = buildDmRequest({ myUserId: acc.user_id, recipientId, text });
+export async function sendDm(acc, { recipientId, text, accountName, requestId } = {}) {
+  const { url, body } = buildDmRequest({ myUserId: acc.user_id, recipientId, text, requestId });
   const tid = await generateTransactionId("POST", DM_PATH);
   const mk = (a) => ({
     method: "POST",

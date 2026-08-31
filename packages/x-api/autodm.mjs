@@ -24,6 +24,10 @@ for (let i = 0; i < args.length; i++) {
   }
   else { console.error(`unknown arg: ${a}\n${USAGE}`); process.exit(1); }
 }
+if (account && all) {
+  console.error(`cannot combine --account and --all\n${USAGE}`);
+  process.exit(1);
+}
 const accounts = all ? listConfigAccounts() : account ? [account] : [];
 if (accounts.length === 0) {
   console.error(all ? "no configs found in autodm/*.json" : USAGE);

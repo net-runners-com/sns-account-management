@@ -15,6 +15,10 @@ test("statePath / logPath はアカウント配下", () => {
   assert.equal(logPath("acc1", "/d"), join("/d", "acc1", "autodm_log.jsonl"));
 });
 
+test("emptyState: rate_limited_until を null で持つ", () => {
+  assert.equal(emptyState().rate_limited_until, null);
+});
+
 test("loadState: 無ければ emptyState、あれば round-trip", () => {
   const p = join(tmp(), "s.json");
   assert.deepEqual(loadState(p), emptyState());
