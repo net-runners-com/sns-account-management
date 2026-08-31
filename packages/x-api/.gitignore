@@ -1,0 +1,7 @@
+node_modules/
+accounts/
+data/
+.env
+*.log
+autodm/*.json
+!autodm/example.json

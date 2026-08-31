@@ -4,6 +4,8 @@
   "pending_days": 7,
   "dm_delay_sec": [30, 90],
   "search_max_pages": 3,
+  "pending_check_limit": 50,
+  "profile_delay_sec": [1, 3],
   "triggers": [
     {
       "id": "campaign-a",
