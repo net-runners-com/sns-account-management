@@ -20,6 +20,16 @@ export function jitterMs([min, max]) {
 }
 
 /**
+ * リプ取得クエリを組み立てる。to:<me> に加え、各トリガー投稿の conversation_id: を union する。
+ * conversation_id: はスレッド限定でノイズが少なく、通知の品質フィルタとは別系統(search index)。
+ */
+export function buildReplyQueries({ screenName, postIds = [] }) {
+  const queries = [`to:${screenName} -from:${screenName}`];
+  for (const id of postIds) if (id) queries.push(`conversation_id:${id} -from:${screenName}`);
+  return queries;
+}
+
+/**
  * リプ一覧から新規候補を抽出する純関数.
  * @returns {{ key, trigger, user_id, screen_name, reply_id, keyword }[]}
  */
@@ -44,15 +54,14 @@ export function defaultDeps() {
   return {
     getAccount,
     getProfile: (acc, opts) => getProfileByRestId(acc, opts),
-    fetchReplies: async (acc, { screenName, maxPages, accountName }) => {
-      const { tweets } = await searchAll(acc, {
-        rawQuery: `to:${screenName} -from:${screenName}`,
-        product: "Latest",
-        max: maxPages * 20,
-        perPage: 20,
-        accountName,
-      });
-      return tweets;
+    fetchReplies: async (acc, { screenName, postIds = [], maxPages, accountName }) => {
+      const seen = new Set();
+      const out = [];
+      for (const rawQuery of buildReplyQueries({ screenName, postIds })) {
+        const { tweets } = await searchAll(acc, { rawQuery, product: "Latest", max: maxPages * 20, perPage: 20, accountName });
+        for (const t of tweets) if (t.id && !seen.has(t.id)) { seen.add(t.id); out.push(t); }
+      }
+      return out;
     },
     sendDm,
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
@@ -107,7 +116,7 @@ export async function runCycle({ accountName, dryRun = false, deps = defaultDeps
     }
 
     // 2. 新規候補 → pending
-    const replies = await fetchReplies(acc, { screenName: me.screen_name, maxPages: config.search_max_pages, accountName });
+    const replies = await fetchReplies(acc, { screenName: me.screen_name, postIds: active.map((t) => t.post_id), maxPages: config.search_max_pages, accountName });
     summary.replies_fetched = replies.length;
     for (const c of findCandidates({ replies, triggers: active, myUserId: state.me.user_id, state })) {
       summary.matched++;

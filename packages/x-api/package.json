@@ -21,6 +21,6 @@
   "dependencies": {
     "camoufox-js": "^0.10.2",
     "cloakbrowser": "^0.3.28",
-    "x-client-transaction-id": "^0.2.3"
+    "x-client-transaction-id": "^0.3.1"
   }
 }

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { findCandidates, runCycle } from "../../lib/autodm/cycle.mjs";
+import { findCandidates, runCycle, buildReplyQueries } from "../../lib/autodm/cycle.mjs";
 import { emptyState, loadState } from "../../lib/autodm/state.mjs";
 import { XSessionError } from "../../lib/errors.mjs";
 
@@ -292,4 +292,18 @@ test("runCycle: active トリガーが無ければ何もしない", async () => 
   const s = await h.run();
   assert.equal(s.matched, 0);
   assert.equal(h.calls.getProfile.length, 0);
+});
+
+test("buildReplyQueries: to:me + 各トリガーの conversation_id を返す", () => {
+  const q = buildReplyQueries({ screenName: "me", postIds: ["100", "200"] });
+  assert.deepEqual(q, [
+    "to:me -from:me",
+    "conversation_id:100 -from:me",
+    "conversation_id:200 -from:me",
+  ]);
+});
+
+test("buildReplyQueries: postIds 空なら to:me のみ / falsy な id は除外", () => {
+  assert.deepEqual(buildReplyQueries({ screenName: "me" }), ["to:me -from:me"]);
+  assert.deepEqual(buildReplyQueries({ screenName: "me", postIds: ["", null, "300"] }), ["to:me -from:me", "conversation_id:300 -from:me"]);
 });
