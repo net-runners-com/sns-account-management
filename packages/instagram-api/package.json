@@ -1,0 +1,26 @@
+{
+  "name": "instagram-api",
+  "version": "0.1.0",
+  "description": "Instagram private web API (/api/v1) pure Node client + CLI. browser-cookie (CDP) auth, no instagrapi bridge.",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./session": "./session.mjs",
+    "./http": "./lib/http.mjs"
+  },
+  "scripts": {
+    "login": "node login_cdp.mjs --domain instagram.com",
+    "import": "node import_cdp.mjs --domain instagram.com",
+    "profile": "node profile.mjs",
+    "posts": "node posts.mjs",
+    "feed": "node feed.mjs",
+    "dm": "node dm_read.mjs",
+    "search": "node search.mjs",
+    "media": "node media.mjs",
+    "reels": "node reels.mjs"
+  },
+  "engines": {
+    "node": ">=21"
+  },
+  "dependencies": {}
+}

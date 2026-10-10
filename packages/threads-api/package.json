@@ -1,0 +1,32 @@
+{
+  "name": "threads-api",
+  "version": "0.1.0",
+  "description": "Threads (threads.com) private web API pure HTTP client + CLI. CDP browser-cookie login, no instagrapi bridge for core features.",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./session": "./session.mjs",
+    "./http": "./lib/http.mjs"
+  },
+  "scripts": {
+    "login": "node login_cdp.mjs",
+    "import": "node import_cdp.mjs",
+    "check": "node check_session.mjs",
+    "post": "node post.mjs",
+    "dm": "node dm.mjs",
+    "search": "node search.mjs",
+    "trends": "node trends.mjs",
+    "posts": "node posts.mjs"
+  },
+  "engines": {
+    "node": ">=21"
+  },
+  "dependencies": {
+    "tlsclientwrapper": "^4.2.0",
+    "libsodium-wrappers": "^0.7.15",
+    "ws": "^8.20.0"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.59.1"
+  }
+}

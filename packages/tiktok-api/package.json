@@ -1,0 +1,24 @@
+{
+  "name": "tiktok-api",
+  "version": "0.1.0",
+  "description": "TikTok web API client + CLI. Camoufox (anti-detect) 経由で ORCAS bot 検知を bypass し、検索 / トレンド動画を取得する。",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./session": "./session.mjs",
+    "./browser": "./lib/browser.mjs",
+    "./sign": "./lib/sign/index.mjs"
+  },
+  "scripts": {
+    "search": "node search.mjs",
+    "trending": "node trending.mjs",
+    "user": "node user.mjs",
+    "video": "node video.mjs"
+  },
+  "engines": {
+    "node": ">=21"
+  },
+  "dependencies": {
+    "camoufox-js": "^0.10.2"
+  }
+}

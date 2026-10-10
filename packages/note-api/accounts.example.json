@@ -1,0 +1,8 @@
+{
+  "_comment": "Copy this file to accounts/note_accounts.json and fill in your account.",
+  "personal_dev": {
+    "email": "your-email@example.com",
+    "cookies": "_note_session_v5=<get-from-devtools>",
+    "clientCode": "<64-hex-from-xhr-header-x-note-client-code>"
+  }
+}

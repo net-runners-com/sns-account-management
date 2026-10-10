@@ -1,0 +1,8 @@
+node_modules/
+.env
+session.json
+accounts/note_accounts.json
+accounts/note_accounts.json.bak
+data/output/
+data/logs/
+*.log

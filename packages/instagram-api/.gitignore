@@ -1,0 +1,4 @@
+accounts/*.json
+!accounts/.gitkeep
+ig_media/
+node_modules/

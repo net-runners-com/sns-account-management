@@ -1,0 +1,11 @@
+{
+  "example_account": {
+    "ds_user_id": "1234567890",
+    "csrftoken": "<from-login>",
+    "ig_did": "<from-login>",
+    "mid": "<from-login>",
+    "cookies": "sessionid=...; csrftoken=...; ds_user_id=1234567890; ig_did=...; mid=...; rur=...",
+    "imported_via": { "method": "cdp-login", "domain": "instagram.com", "os": "darwin", "at": "2026-06-04T00:00:00.000Z" }
+  },
+  "_comment": "テンプレ. 実体は accounts/instagram_accounts.json. 通常は login_cdp.mjs (手動ログイン) か import_cdp.mjs (既存ログイン再利用) で自動生成. 手書きは debug 時のみ."
+}

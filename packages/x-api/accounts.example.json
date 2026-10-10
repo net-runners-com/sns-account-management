@@ -1,0 +1,17 @@
+{
+  "example_account": {
+    "user_id": "1234567890",
+    "screen_name": "your_handle",
+    "auth_token": "<from-devtools-or-browser-login>",
+    "ct0": "<from-devtools-or-browser-login>",
+    "twid": "u%3D1234567890",
+    "kdt": "<optional>",
+    "att": "<optional>",
+    "guest_id": "<optional>",
+    "personalization_id": "<optional>",
+    "cookies": "auth_token=...; ct0=...; twid=u%3D1234567890; kdt=...; att=...; guest_id=...; personalization_id=...; lang=en",
+    "refreshed_at": "2026-05-17T00:00:00.000Z",
+    "refreshed_via": "browser_login"
+  },
+  "_comment": "このファイルは accounts.example.json (テンプレ). 実体は accounts/x_accounts.json. 通常は login_browser.mjs か login.mjs 経由で自動生成される. 手で書くのは debug 時のみ."
+}

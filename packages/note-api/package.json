@@ -1,0 +1,33 @@
+{
+  "name": "note-api",
+  "version": "0.1.0",
+  "description": "note.com API client + CLI: 記事 CRUD / 有料エリア / 画像・音源・添付 / SNS 埋め込み / .note ファイル形式",
+  "private": true,
+  "type": "module",
+  "main": "./lib/index.mjs",
+  "exports": {
+    ".": "./lib/index.mjs",
+    "./session": "./session.mjs",
+    "./notes": "./lib/notes.mjs",
+    "./noteformat": "./lib/noteformat.mjs",
+    "./paywall": "./lib/paywall.mjs",
+    "./images": "./lib/images.mjs",
+    "./embeds": "./lib/embeds.mjs",
+    "./sounds": "./lib/sounds.mjs",
+    "./search": "./lib/search.mjs",
+    "./users": "./lib/users.mjs",
+    "./stats": "./lib/stats.mjs"
+  },
+  "scripts": {
+    "check": "node check_session.mjs",
+    "login": "node login_browser.mjs",
+    "refresh": "node refresh_session.mjs",
+    "post": "node --env-file=.env post_note_file.mjs",
+    "notices": "node notices.mjs"
+  },
+  "dependencies": {
+    "cloakbrowser": "^0.3.28",
+    "note-api-client": "^0.0.32",
+    "playwright": "^1.59.1"
+  }
+}
